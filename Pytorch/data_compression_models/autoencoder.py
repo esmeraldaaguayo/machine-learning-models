@@ -8,14 +8,15 @@ class Encoder(nn.Module):
     def __init__(
             self,
             input_dims: int,
-            hidden_dims: int = 512,
-            latent_dims: int = 20,
+            hidden_dims: int,
+            latent_dims: int,
     ) -> None:
         super(Encoder, self).__init__()
         self.fc_linear1 = nn.Linear(input_dims, hidden_dims)
         self.fc_linear2 = nn.Linear(hidden_dims, latent_dims)
 
     def forward(self, x: Any) -> torch.Tensor:
+        x = torch.flatten(x, start_dim=1)
         h = F.relu(self.fc_linear1(x))
         z = self.fc_linear2(h)
         return z
@@ -34,8 +35,8 @@ class Decoder(nn.Module):
 
     def forward(self, z: torch.Tensor) -> Any:
         h = F.relu(self.fc_linear1(z))
-        x = self.fc_linear2(h)
-        return x
+        x = torch.sigmoid(self.fc_linear2(h))
+        return x.reshape((-1, 1, 28, 28))
 
 
 class Autoencoder(nn.Module):
@@ -46,8 +47,8 @@ class Autoencoder(nn.Module):
             latent_dims: int,
     ) -> None:
         super(Autoencoder, self).__init__()
-        self.encoder = Encoder()
-        self.decoder = Decoder()
+        self.encoder = Encoder(input_dims, hidden_dims, latent_dims)
+        self.decoder = Decoder(latent_dims, hidden_dims, input_dims)
 
     def forward(self, x):
         z = self.encoder(x)
