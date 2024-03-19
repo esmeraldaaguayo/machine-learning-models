@@ -9,9 +9,10 @@ from utils import plot_latents, plot_training_loss, plot_reconstructed
 import config_vae
 
 
-def train(loader, model, optimizer, criterion, device):
+def train(loader, model, optimizer, device):
     model.train()
-
+    train_epoch_loss = 0
+    train_epoch_reconst_loss = 0
     for batch_idx, (data, _) in enumerate(tqdm(loader)):
         # to device
         x = data.to(device)
@@ -19,19 +20,18 @@ def train(loader, model, optimizer, criterion, device):
         # flatten images into 2D tensors
         x_2d = torch.flatten(x, start_dim=1)
 
-        # forward
-        mu, sigma, x_hat = model(x_2d)
-
-        loss_fn = nn.MSELoss(reduction="sum")
-        loss = loss_fn(x_hat, x_2d)
-        train_epoch_loss = loss.cpu().detach().numpy()
-
-
-        # backward
         optimizer.zero_grad()
+        loss, reconst_loss = model.loss_function(x_2d)
         loss.backward()
         optimizer.step()
-    return model, train_epoch_loss
+
+        train_epoch_loss += loss
+        train_epoch_reconst_loss += reconst_loss
+
+    train_epoch_loss /= len(loader.dataset)
+    train_epoch_reconst_loss /= len(loader.dataset)
+
+    return model, train_epoch_loss, train_epoch_reconst_loss
 
 
 def main():
@@ -48,23 +48,24 @@ def main():
     # configure model
     model = VariationalAutoencoder(input_dims=28*28, hidden_dims=512, latent_dims=2).to(config_vae.DEVICE)
     optimizer = optim.Adam(model.parameters(), lr=config_vae.LEARNING_RATE)
-    # criterion = torch.nn.MSELoss()
 
     # train model
-    recon_losses = []
-    kl_losses = []
-    losses = []
+    train_recon_losses = []
+    train_total_losses = []
     for epoch in range(config_vae.NUM_EPOCHS):
         print(f"Processing epoch num: {epoch}")
-        trained_vae, train_epoch_loss = train(train_loader, model, optimizer, criterion, config_vae.DEVICE)
+        trained_vae, train_epoch_loss, train_epoch_reconst_loss = train(train_loader, model, optimizer, config_vae.DEVICE)
 
         # keep track of losses
-        train_loss.append(train_epoch_loss)
+        train_recon_losses.append(train_epoch_loss.cpu().detach().numpy())
+        train_total_losses.append(train_epoch_reconst_loss.cpu().detach().numpy())
 
     # visualizations
-    plot_training_loss(train_loss)
-    plot_latents(trained_ae, train_loader, config_vae.DEVICE)
-    plot_reconstructed(trained_ae, config_vae.DEVICE)
+    plot_training_loss(train_recon_losses, "reconstruction_loss_training")
+    plot_training_loss(train_total_losses, "reconstruction_KL_divergence_loss_training")
+
+    # plot_latents(trained_vae, train_loader, config_vae.DEVICE)
+    plot_reconstructed(trained_vae, config_vae.DEVICE, r0=(-3, 3), r1=(-3, 3))
 
 
 if __name__ == "__main__":

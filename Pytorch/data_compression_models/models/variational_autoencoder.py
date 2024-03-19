@@ -64,3 +64,22 @@ class VariationalAutoencoder(nn.Module):
         x_hat = self.decoder(z)
 
         return mu, sigma, x_hat
+
+    def loss_function(self, x):
+        mu, sigma, x_hat = self.forward(x)
+
+        loss_fn = nn.MSELoss(reduction="sum")
+        reconst_loss = loss_fn(x_hat, x)
+
+        # learned distribution
+        q_z = torch.distributions.Normal(mu, sigma)
+        # prior distribution
+        p_z = torch.distributions.Normal(0, 1)
+        # use pytorch's implementation of KL divergence
+        # Sum the KL divergence across all dimensions, make it batch size agnostic
+        kl_loss = torch.distributions.kl_divergence(q_z, p_z).sum().mean()
+        total_loss = reconst_loss + kl_loss
+
+        return total_loss, reconst_loss
+
+
