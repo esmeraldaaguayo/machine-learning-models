@@ -5,7 +5,7 @@ from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from data_compression_models.models.variational_autoencoder import VariationalAutoencoder
-from utils import plot_latents, plot_training_loss, plot_reconstructed
+from utils import plot_latents, plot_training_loss, plot_reconstructed, inference
 import config_vae
 
 
@@ -64,8 +64,10 @@ def main():
     plot_training_loss(train_recon_losses, "reconstruction_loss_training")
     plot_training_loss(train_total_losses, "reconstruction_KL_divergence_loss_training")
 
-    # plot_latents(trained_vae, train_loader, config_vae.DEVICE)
+    plot_latents(trained_vae, train_loader, config_vae.DEVICE)
     plot_reconstructed(trained_vae, config_vae.DEVICE, r0=(-3, 3), r1=(-3, 3))
+
+    inference(digit=8, model=trained_vae, dataset=train_data, num_examples=2)
 
 
 if __name__ == "__main__":

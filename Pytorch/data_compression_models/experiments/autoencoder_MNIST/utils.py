@@ -3,31 +3,6 @@ import numpy as np
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
 
 
-def get_accuracy(data_loader, model, batch_size, device):
-    """
-    compute the accuracy over the supervised training set or the testing set
-    """
-    pass
-    # model.eval()
-    # predictions_d, actuals_d, predictions_y, actuals_y = [], [], [], []
-    #
-    # with torch.no_grad():
-    #     for x, y in data_loader:
-    #         # to device
-    #         x, y = x.to(device=device), y.to(device=device)
-    #
-    #         scores = model(x))
-    #         predictions = (scores > 0.5).float()
-    #         num_correct += (predictions == y).sum()
-    #         num_samples += predictions.shape[0]
-    #
-    #     print(f'Got {num_correct} / {num_samples} with accuracy {float(num_correct) / float(num_samples) * 100:.2f}')
-
-
-def get_reconstruction():
-    pass
-
-
 def plot_reconstructed(trained_model, device, r0=(-5, 10), r1=(-10, 5), n=12):
     """
     Reconstructs inputs from arbitrary latent vectors

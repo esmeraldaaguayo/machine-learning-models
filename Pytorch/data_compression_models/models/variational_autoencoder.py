@@ -81,5 +81,3 @@ class VariationalAutoencoder(nn.Module):
         total_loss = reconst_loss + kl_loss
 
         return total_loss, reconst_loss
-
-

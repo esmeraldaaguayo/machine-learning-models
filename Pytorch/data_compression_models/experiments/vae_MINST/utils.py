@@ -1,31 +1,36 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt; plt.rcParams['figure.dpi'] = 200
+from torchvision.utils import save_image
 
 
-def get_accuracy(data_loader, model, batch_size, device):
+def inference(digit, model, dataset, num_examples = 1):
     """
-    compute the accuracy over the supervised training set or the testing set
+    Generates (num_examples) of a particular digit.
+    Get learned mu and sigma for that digit representation.
     """
-    pass
-    # model.eval()
-    # predictions_d, actuals_d, predictions_y, actuals_y = [], [], [], []
-    #
-    # with torch.no_grad():
-    #     for x, y in data_loader:
-    #         # to device
-    #         x, y = x.to(device=device), y.to(device=device)
-    #
-    #         scores = model(x))
-    #         predictions = (scores > 0.5).float()
-    #         num_correct += (predictions == y).sum()
-    #         num_samples += predictions.shape[0]
-    #
-    #     print(f'Got {num_correct} / {num_samples} with accuracy {float(num_correct) / float(num_samples) * 100:.2f}')
+    images = []
+    idx = 0
+    for x, y in dataset:
+        if y == idx:
+            images.append(x)
+            idx += 1
+        if idx == 10:
+            break
+    encodings_digit = []
+    for d in range(10):
+        with torch.no_grad():
+            mu, sigma = model.encoder(images[d].view(1, 784))
+        encodings_digit.append((mu, sigma))
 
-
-def get_reconstruction():
-    pass
+    mu, sigma = encodings_digit[digit]
+    learned_dist = torch.distributions.Normal(mu, sigma)
+    for example in range(num_examples):
+        z = learned_dist.rsample()
+        out = model.decoder(z)
+        out = out.view(-1, 1, 28, 28)
+        save_image(out, f"plots/generated_{digit}_ex{example}.png")
+    return None
 
 
 def plot_reconstructed(trained_model, device, r0=(-5, 10), r1=(-10, 5), n=12):
