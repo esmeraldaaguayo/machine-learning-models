@@ -2,11 +2,12 @@ import numpy as np
 import pandas as pd
 from sklearn.metrics import roc_curve, roc_auc_score
 from sklearn.metrics import confusion_matrix
+from sklearn.inspection import permutation_importance
 
+from pdpbox import pdp
 
 import seaborn as sns
 import matplotlib.pyplot as plt
-# sns.set_style("white")
 sns.set_style('darkgrid')
 
 
@@ -147,4 +148,31 @@ def training_data_preparation(df):
     # convert categorical to numerical values
     cols_to_onehot = df.copy().select_dtypes(include=['object', 'category']).columns
     x = generate_one_hot_columns(x, cols_to_onehot)
+
+    # use only top 10 important features
+    cols_to_keep = [
+        'handset_ASAD90', 'handset_CAS30', 'international_mins_sum',
+        'total_cost', 'average_cost_min', 'age', 'total_call_cost',
+        'mins_charge', 'dropped_calls', 'all_calls_mins',
+    ]
+    x = x[cols_to_keep]
     return x, y
+
+
+def plot_permutation_importance(model, x_val, y_val):
+    perm = permutation_importance(model, x_val, y_val, n_repeats=30, random_state=0)
+    sorted_idx = perm.importances_mean.argsort()
+
+    fig = plt.figure(figsize=(12, 6))
+    plt.barh(range(len(sorted_idx)), perm.importances_mean[sorted_idx], align='center')
+    plt.yticks(range(len(sorted_idx)), np.array(x_val.columns)[sorted_idx])
+    plt.title('Permutation Importance')
+    plt.savefig("plots/permutation_importance.png")
+
+
+def get_partial_dependence_plot(model, x_val, feature):
+    fig = plt.figure(figsize=(12, 6))
+    pdp_p = pdp.pdp_isolate(model=model, dataset=x_val, model_features=x_val.columns.values,
+                            feature=feature)
+    pdp.pdp_plot(pdp_p, feature)
+    plt.savefig(f"plots/pdp_{feature}.png")

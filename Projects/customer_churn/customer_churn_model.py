@@ -1,7 +1,7 @@
 import pandas as pd
 from customer_churn.utils import (
     generate_auc_curve, compose_confusion_matrix_plot, plot_feature_importance,
-    data_cleanup, training_data_preparation
+    data_cleanup, training_data_preparation, plot_permutation_importance,
 )
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score
@@ -15,7 +15,6 @@ x, y = training_data_preparation(train_df)
 
 # split data
 x_train, x_val, y_train, y_val = train_test_split(x, y, test_size = 0.2, random_state = 42)
-print(x_train.head())
 
 # train random forest model
 clf = RandomForestClassifier(max_depth=100, random_state=0, class_weight="balanced")
@@ -38,5 +37,6 @@ print("Recall:", recall)
 compose_confusion_matrix_plot(y_val, y_pred)
 generate_auc_curve(y_val, probabilities)
 
-# explainable AI
+# understand model
 plot_feature_importance(x_train, clf)
+plot_permutation_importance(clf, x_val, y_val)
