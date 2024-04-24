@@ -19,3 +19,11 @@ def onehot_sequence_encoder(df, column, max_seq_len):
     seq_array = np.array([list(seq) for seq in df[column]])
     seq_encoded = aa_enc.transform(seq_array).toarray()
     return seq_encoded
+
+
+def atchley_sequence_encoder():
+    pass
+
+
+def blosum65_sequence_encoder():
+    pass
